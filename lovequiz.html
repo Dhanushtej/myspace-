@@ -1,0 +1,58 @@
+<!-- lovequiz.html -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Are you serious? — Quiz</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><h1>Are you serious?</h1></div>
+  <div class="nav"><a class="btn" href="index.html">Home</a></div>
+</header>
+
+<main class="container">
+  <section class="card center" style="flex-direction:column;gap:12px">
+    <h2>Are you serious about us?</h2>
+    <p>Choose how serious you are — this decides the surprise ❤️</p>
+
+    <!-- Four options: we map 100->song1, 200->song2, 300->song3 (you can add more songs), Infinity -> punching bag -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button class="btn" data-val="100">100</button>
+      <button class="btn" data-val="200">200</button>
+      <button class="btn" data-val="300">300</button>
+      <button class="btn primary" data-val="infinity">∞ (Infinity)</button>
+    </div>
+
+    <p style="color:#777;margin-top:8px">100 / 200 / 300 will play a song and show lyrics. Infinity goes to the punch bag surprise.</p>
+  </section>
+</main>
+
+<footer class="footer">Choose with your heart ❤️</footer>
+
+<script>
+/* NOTE: Update song mappings if you change filenames.
+   - songs/song1.mp3  -> mapped to 100
+   - songs/song2.mp3  -> mapped to 200
+   - songs/song3.mp3  -> mapped to 300
+   Add those mp3 files into /songs folder.
+*/
+document.querySelectorAll('.btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const v = btn.getAttribute('data-val');
+    if(v==='infinity'){
+      // go to punching bag page
+      window.location.href = 'bag.html';
+    } else {
+      // redirect to lyrics page for the chosen song id
+      // mapping: 100 => song=1, 200 => song=2, 300 => song=3
+      const map = { '100':1, '200':2, '300':3 };
+      const songId = map[v] || 1;
+      window.location.href = `lyrics.html?song=${songId}`;
+    }
+  });
+});
+</script>
+</body>
+</html>

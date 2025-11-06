@@ -1,0 +1,105 @@
+<!-- lyrics.html -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Song & Lyrics</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* override to make full white cinematic screen */
+.lyrics-screen{background:#fff;color:#111}
+.title{font-family:'Playfair Display',serif;color:var(--accent);font-size:1.6rem;margin-bottom:6px}
+.line{opacity:0;white-space:pre-wrap}
+.controls{margin-top:18px}
+.small-muted{color:#666;font-size:0.95rem;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div id="screen" class="lyrics-screen fade-in" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="max-width:840px;text-align:center;padding:12px">
+    <div class="title" id="songTitle">[Song Title]</div>
+    <div class="lyrics" id="lyricsArea" style="color:#222;margin-top:8px"></div>
+    <div class="controls center">
+      <audio id="player" controls>
+        <!-- Replace src below with your song file: songs/song1.mp3 or songs/song2.mp3 or songs/song3.mp3 -->
+        <!-- Example: <source src="songs/song1.mp3" type="audio/mpeg"> -->
+      </audio>
+    </div>
+    <div class="small-muted">If audio doesn't play automatically, press play ▶️</div>
+  </div>
+</div>
+
+<script>
+/* Query param -> choose which song & lyrics to show.
+   IMPORTANT: Edit the 'SONG_DATA' object below to add your song filename and lyrics.
+   Replace placeholders with real lyrics. Keep the lyric array lines where indicated.
+*/
+const SONG_DATA = {
+  '1': {
+    title: 'Song 1 Title',
+    file: 'songs/song1.mp3', /* <- Upload your song file to songs/song1.mp3 */
+    lyrics: [
+      // <-- Replace the lines below with the song's lyrics (each array element = one displayed line)
+      "కోర కోర కోపమేల చుర చుర చూపువేళ",
+      "మనోహరి మాడిపోనా , అంత ఉడికిస్తే",
+      "అర్ అని జాలిపడవేమి పాపం కధే ప్రేయసి",
+      "సరే అని చల్లబడవే మోసి పిశాచి",
+      "ఉహు అలా తిప్పుకుంటూ తూలిపోకే ఊర్వశి",
+      "అహో అలా నవ్వుతావే మీసం మెలేసి ఎన్నాళ్ళినాక ఊరికే ఊహల్లో",
+     "ఉంటావ్ పెంకి పిల్ల చాల్లే ఇంకా మానుకో",
+      "ముందు వెనక చూసుకొని పంతం ఆలోచిద్దాం చక్కగా కూర్చొని",
+       "చరిచిద్దాం చాలు యుద్ధం రాజీకొద్దాం కొద్దిగా కలిసొస్తే",
+        "నీకేమిటంత కష్టం",
+      // add more lines...
+    ]
+  },
+  '2': {
+    title: 'Song 2 Title',
+    file: 'songs/song2.mp3', /* <- Upload song2.mp3 here */
+    lyrics: [
+                 "కోపంగా కోపంగా చూడొదే గారంగా",
+                  "చీటికీ మాటికీ తిట్టాకే తియ్యంగా",
+                  "దూరంగా దూరంగా వెళ్ళొదే మౌనంగా",
+                   "నే అల్లరి అడుగుల సరిగమ విన్నగా",
+    ]
+  },
+  
+  
+};
+
+function qs(param){ const url = new URL(window.location.href); return url.searchParams.get(param); }
+const songId = qs('song') || '1';
+const data = SONG_DATA[songId] || SONG_DATA['1'];
+
+document.getElementById('songTitle').textContent = data.title || 'Our Song';
+const player = document.getElementById('player');
+
+// attach audio src dynamically (so it's easy to update)
+player.innerHTML = `<source src="${data.file}" type="audio/mpeg">`;
+
+// Typewriter-style reveal of lyrics (line by line)
+const lyricsArea = document.getElementById('lyricsArea');
+const lines = data.lyrics || [];
+let li = 0;
+function revealNext(){
+  if(li >= lines.length) return;
+  const p = document.createElement('div');
+  p.className = 'line';
+  p.textContent = lines[li];
+  lyricsArea.appendChild(p);
+  // appear with fade/slide
+  setTimeout(()=>{ p.style.transition='opacity .5s, transform .45s'; p.style.opacity=1; p.style.transform='translateY(0)'; }, 80);
+  li++;
+  // reveal next line after a short delay (cinematic)
+  setTimeout(revealNext, 900);
+}
+// initialize hidden transform
+lines.forEach(()=>{ /* nothing */});
+revealNext();
+
+// Optional: play automatically (mobile browsers sometimes block auto-play with sound)
+player.play().catch(()=>{/* user will tap to play */});
+</script>
+</body>
+</html>

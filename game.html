@@ -1,0 +1,57 @@
+<!-- game.html -->
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tic Tac Love</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<header><div class="brand"><h1>Tic Tac Love</h1></div><div class="nav"><a class="btn" href="index.html">Home</a></div></header>
+
+<main class="container">
+  <section class="card center" style="flex-direction:column;gap:12px">
+    <h2>💋 Play with me</h2>
+    <div id="status" style="font-weight:700;color:var(--accent)">Turn: 💋</div>
+    <div class="grid" id="grid"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="reset">Reset</button>
+      <button class="btn" id="hint">Hint</button>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">Two-player on same screen — faster love wins ❤️</footer>
+
+<script>
+const gridEl = document.getElementById('grid');
+const status = document.getElementById('status');
+let board = Array(9).fill('');
+let turn = '💋';
+const winCombos=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function render(){
+  gridEl.innerHTML='';
+  board.forEach((v,i)=>{
+    const c = document.createElement('div');
+    c.className='cell';
+    c.textContent = v;
+    c.addEventListener('click', ()=> {
+      if(board[i]||checkWin()) return;
+      board[i]=turn; c.textContent=turn;
+      if(checkWin()){
+        status.textContent = `${turn} wins! 💞`;
+      } else if(board.every(x=>x!='')){
+        status.textContent = `Draw — so close!`;
+      } else {
+        turn = turn==='💋'?'❤️':'💋';
+        status.textContent = `Turn: ${turn}`;
+      }
+    });
+    gridEl.appendChild(c);
+  })
+}
+function checkWin(){ return winCombos.some(([a,b,c])=>board[a] && board[a]===board[b] && board[a]===board[c]); }
+document.getElementById('reset').addEventListener('click', ()=>{ board = Array(9).fill(''); turn='💋'; status.textContent=`Turn: ${turn}`; render(); });
+document.getElementById('hint').addEventListener('click', ()=>{ // simple hint: pick first empty
+  const idx = board.findIndex(x=>x===''); if(idx>=0){ board[idx] = turn; turn = turn==='💋'?'❤️':'💋'; render(); status.textContent=`Turn: ${turn}`; }});
+render();
+</script>
+</body></html>

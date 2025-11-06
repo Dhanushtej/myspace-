@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Our Locker — Memories</title>
+<link rel="stylesheet" href="style.css"> <!-- uses your shared stylesheet -->
+<style>
+/* Small locker-specific styles (keeps consistent look) */
+.locker-wrap{max-width:920px;margin:12px auto;padding:12px}
+.pin-pad{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pin-input{width:60px;height:60px;border-radius:10px;border:2px solid rgba(0,0,0,0.06);font-size:1.6rem;text-align:center}
+.btn{padding:8px 12px;border-radius:10px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+.small{font-size:0.9rem;color:#666}
+.gallery{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.thumb{width:120px;height:120px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid rgba(0,0,0,0.04)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.controls{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.note{font-size:0.9rem;color:#444;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><h1>Locker — Our Memories 🔒</h1></div>
+  <div class="nav"><a class="btn" href="index.html">Home</a></div>
+</header>
+
+<main class="container locker-wrap card">
+  <!-- Step 1: PIN entry or setup -->
+  <section id="pinSection" class="center" style="flex-direction:column;gap:12px">
+    <h2 id="pinTitle">Enter 4-digit PIN to open locker</h2>
+    <div class="pin-pad">
+      <input id="pin1" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]*">
+      <input id="pin2" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]*">
+      <input id="pin3" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]*">
+      <input id="pin4" maxlength="1" class="pin-input" inputmode="numeric" pattern="[0-9]*">
+    </div>
+    <div class="controls">
+      <button id="submitPin" class="btn">Open</button>
+      <button id="setPinBtn" class="btn" style="background:#ffb0c7">Set / Change PIN</button>
+      <button id="clearData" class="btn" style="background:#f1a0c2">Clear Locker</button>
+    </div>
+    <p id="pinMsg" class="small">If you're opening for the first time, set a PIN using "Set / Change PIN".</p>
+  </section>
+
+  <!-- Step 2: Locker content (hidden until correct PIN) -->
+  <section id="lockerContent" style="display:none;">
+    <h3>Our Photos</h3>
+    <p class="note">Upload photos here. They are saved only on this device (private). Use the same browser to view later.</p>
+
+    <!-- upload control -->
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+      <input id="fileInput" type="file" accept="image/*" multiple style="display:none">
+      <button class="btn" id="chooseBtn">Choose Photos</button>
+      <button class="btn" id="uploadBtn">Upload Selected</button>
+      <button class="btn" id="downloadAll" style="background:#ffb0c7">Download All (zip)</button>
+    </div>
+
+    <!-- gallery -->
+    <div id="gallery" class="gallery" aria-live="polite" style="margin-top:14px"></div>
+
+    <!-- small guide -->
+    <p class="small" style="margin-top:10px">You can remove photos by tapping the trash icon on each thumbnail.</p>
+  </section>
+</main>
+
+<footer class="footer">Locker saved locally — safe & private ❤️</footer>
+
+<script>
+/*
+Locker uses localStorage to:
+ - store a hashed PIN (simple obfuscation)
+ - store images as base64 strings in an array under key 'locker_photos_v1'
+Security note: this is client-side storage only (private to the browser/device). Do not store extremely sensitive files here.
+*/
+
+// storage keys
+const PIN_KEY = 'locker_pin_v1';
+const PHOTOS_KEY = 'locker_photos_v1';
+
+// helpers
+const getEl = id => document.getElementById(id);
+
+// PIN setup / check
+const pinInputs = [getEl('pin1'), getEl('pin2'), getEl('pin3'), getEl('pin4')];
+const submitBtn = getEl('submitPin'), setPinBtn = getEl('setPinBtn'), clearBtn = getEl('clearData');
+const pinMsg = getEl('pinMsg');
+const pinTitle = getEl('pinTitle');
+
+function readPinFromInputs(){
+  return pinInputs.map(i=>i.value.trim()).join('');
+}
+function clearPinInputs(){ pinInputs.forEach(i=>i.value=''); pinInputs[0].focus(); }
+
+// simple hash (not secure crypto — just to avoid plain storage)
+function simpleHash(str){
+  let h=0; for(let i=0;i<str.length;i++){ h = (h<<5)-h + str.charCodeAt(i); h |= 0; } return 'p'+Math.abs(h);
+}
+
+function hasStoredPin(){ return !!localStorage.getItem(PIN_KEY); }
+
+// set or change PIN
+setPinBtn.addEventListener('click', ()=>{
+  const pin = readPinFromInputs();
+  if(pin.length !== 4 || !/^\d{4}$/.test(pin)){ alert('Enter a 4-digit numeric PIN in the boxes, then click Set / Change PIN.'); return; }
+  if(!confirm('Set this 4-digit PIN for your locker?')) return;
+  localStorage.setItem(PIN_KEY, simpleHash(pin));
+  pinMsg.textContent = 'PIN set — now use Open to unlock.';
+  clearPinInputs();
+  pinInputs[0].focus();
+});
+
+// open locker
+submitBtn.addEventListener('click', ()=>{
+  const pin = readPinFromInputs();
+  if(pin.length !== 4){ alert('Enter 4 digits.'); return; }
+  const stored = localStorage.getItem(PIN_KEY);
+  if(!stored){ alert('No PIN found — please set a PIN first using "Set / Change PIN".'); return; }
+  if(simpleHash(pin) === stored){
+    openLocker();
+  } else {
+    pinMsg.textContent = 'Incorrect PIN — try again.';
+    clearPinInputs();
+  }
+});
+
+// clear locker data (photos + pin)
+clearBtn.addEventListener('click', ()=>{
+  if(!confirm('This will REMOVE all locker photos and PIN from this browser. Are you sure?')) return;
+  localStorage.removeItem(PIN_KEY);
+  localStorage.removeItem(PHOTOS_KEY);
+  alert('Locker cleared. Please set a new PIN.');
+  location.reload();
+});
+
+// open locker UI
+const lockerContent = getEl('lockerContent');
+function openLocker(){
+  getEl('pinSection').style.display = 'none';
+  lockerContent.style.display = 'block';
+  loadGallery();
+}
+
+// if no PIN exists, hint user to set
+if(!hasStoredPin()){
+  pinMsg.textContent = 'No PIN set yet — enter 4 digits and click "Set / Change PIN".';
+} else {
+  pinMsg.textContent = 'PIN exists — enter it and click Open.';
+}
+
+// upload handling (files read as base64 and stored in localStorage array)
+const fileInput = getEl('fileInput');
+const chooseBtn = getEl('chooseBtn');
+const uploadBtn = getEl('uploadBtn');
+const gallery = getEl('gallery');
+
+let stagedFiles = []; // File objects temporarily chosen
+
+chooseBtn.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', (e)=>{
+  const files = Array.from(e.target.files || []);
+  stagedFiles = files;
+  if(files.length) alert(files.length + ' file(s) selected. Click "Upload Selected" to save them.');
+});
+
+// conversion helper: file -> base64
+function fileToDataURL(file){
+  return new Promise(resolve=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+uploadBtn.addEventListener('click', async ()=>{
+  if(!stagedFiles.length){ alert('Choose photo(s) first.'); return; }
+  const stored = JSON.parse(localStorage.getItem(PHOTOS_KEY) || '[]');
+  // convert and append
+  for(const f of stagedFiles){
+    // optional: reduce size here in future; currently store as-is
+    const data = await fileToDataURL(f);
+    stored.push({ id: 'p'+Date.now() + Math.floor(Math.random()*9999), name: f.name, data, created: Date.now() });
+  }
+  localStorage.setItem(PHOTOS_KEY, JSON.stringify(stored));
+  stagedFiles = [];
+  fileInput.value = '';
+  alert('Uploaded and saved to locker.');
+  loadGallery();
+});
+
+// load gallery from localStorage
+function loadGallery(){
+  gallery.innerHTML = '';
+  const stored = JSON.parse(localStorage.getItem(PHOTOS_KEY) || '[]');
+  if(!stored.length){ gallery.innerHTML = '<p class="small">No photos yet — upload to save your memories here.</p>'; return; }
+  stored.slice().reverse().forEach(item=>{
+    const div = document.createElement('div'); div.className='thumb';
+    const img = document.createElement('img'); img.src = item.data; img.alt = item.name;
+    div.appendChild(img);
+    // controls: view (open in new tab) and delete
+    const ctrlWrap = document.createElement('div'); ctrlWrap.style.position='absolute'; ctrlWrap.style.top='6px'; ctrlWrap.style.right='6px';
+    // delete button (small)
+    const del = document.createElement('button'); del.textContent='🗑️'; del.title='Delete photo'; del.style.border='none'; del.style.background='rgba(255,255,255,0.85)'; del.style.borderRadius='6px'; del.style.padding='4px'; del.onclick = (e)=>{
+      e.stopPropagation();
+      if(!confirm('Delete this photo permanently from locker?')) return;
+      deletePhoto(item.id);
+    };
+    // view button
+    const view = document.createElement('button'); view.textContent='🔍'; view.title='Open in new tab'; view.style.marginLeft='6px'; view.style.border='none'; view.style.background='rgba(255,255,255,0.85)'; view.style.borderRadius='6px'; view.style.padding='4px'; view.onclick = (e)=>{
+      e.stopPropagation();
+      window.open(item.data, '_blank');
+    };
+    ctrlWrap.appendChild(view); ctrlWrap.appendChild(del);
+    div.style.position='relative';
+    div.appendChild(ctrlWrap);
+    gallery.appendChild(div);
+  });
+}
+
+// delete helper
+function deletePhoto(id){
+  const arr = JSON.parse(localStorage.getItem(PHOTOS_KEY) || '[]');
+  const filtered = arr.filter(x=>x.id !== id);
+  localStorage.setItem(PHOTOS_KEY, JSON.stringify(filtered));
+  loadGallery();
+}
+
+// optional: Download all as separate images (simple approach: open each dataURL in new tab — recommended to save manually)
+getEl('downloadAll').addEventListener('click', ()=>{
+  const arr = JSON.parse(localStorage.getItem(PHOTOS_KEY) || '[]');
+  if(!arr.length){ alert('No photos to download.'); return; }
+  // open each in a new tab so user can save
+  arr.forEach(item => window.open(item.data, '_blank'));
+});
+
+// UX: auto-focus next pin input
+pinInputs.forEach((inp, idx)=>{
+  inp.addEventListener('input', ()=>{
+    if(inp.value.length === 1 && idx < pinInputs.length-1) pinInputs[idx+1].focus();
+  });
+  inp.addEventListener('keydown', (e)=>{
+    if(e.key === 'Backspace' && inp.value === '' && idx>0) pinInputs[idx-1].focus();
+  });
+});
+
+// If user set PIN and wants to open quickly, we can optionally open if hash in URL (not required).
+// End of locker script
+</script>
+</body>
+</html>

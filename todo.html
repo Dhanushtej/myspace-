@@ -1,0 +1,78 @@
+<!-- todo.html -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>To-Do with Yashika</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="brand"><h1>Our To-Do</h1></div><div class="nav"><a class="btn" href="index.html">Home</a></div></header>
+
+<main class="container">
+  <section id="todo" class="card">
+    <h2>💖 Our Future To-Do List</h2>
+    <ul id="todoList">
+      <!-- default items (edit or add more directly) -->
+      <li><label><input type="checkbox" data-id="item-1"> Listening Songs at nyt</label></li>
+      <li><label><input type="checkbox" data-id="item-2"> Eating food Together</label></li>
+      <li><label><input type="checkbox" data-id="item-3"> listening I love u from ur voice</label></li>
+      <li><label><input type="checkbox" data-id="item-4"> Travel to the hills 🏔️</label></li>
+    </ul>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <input id="newTask" placeholder="Add new dream..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #eee">
+      <button class="btn" id="addTask">Add</button>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">Tick it when done — memories saved ❤️</footer>
+
+<script>
+/* Persistence with localStorage (saves which checkboxes are checked and custom tasks) */
+const list = document.getElementById('todoList');
+const storageKey = 'yashika_todo_v1';
+
+// load state
+function loadState(){
+  const raw = localStorage.getItem(storageKey);
+  if(!raw) return;
+  try{
+    const obj = JSON.parse(raw);
+    // restore checked
+    obj.checked?.forEach(id=>{
+      const cb = document.querySelector(`input[data-id="${id}"]`);
+      if(cb) cb.checked = true;
+    });
+    // restore custom tasks
+    if(obj.custom?.length){
+      obj.custom.forEach(it=>{
+        addTaskToDOM(it.id, it.text, it.checked);
+      });
+    }
+  }catch(e){}
+}
+function saveState(){
+  const checked = Array.from(document.querySelectorAll('#todoList input[type="checkbox"]')).filter(c=>c.checked).map(c=>c.dataset.id);
+  const custom = Array.from(document.querySelectorAll('#todoList li')).filter(li=>li.dataset.custom==='true').map(li=>({id: li.querySelector('input').dataset.id, text: li.querySelector('label').innerText.trim(), checked: li.querySelector('input').checked}));
+  localStorage.setItem(storageKey, JSON.stringify({checked, custom}));
+}
+
+function addTaskToDOM(id, text, checked=false){
+  const li = document.createElement('li');
+  li.dataset.custom = 'true';
+  const label = document.createElement('label');
+  const cb = document.createElement('input');
+  cb.type='checkbox'; cb.dataset.id = id; cb.checked = !!checked;
+  cb.addEventListener('change', saveState);
+  label.appendChild(cb);
+  label.append(' ' + text);
+  li.appendChild(label);
+  document.getElementById('todoList').appendChild(li);
+}
+
+document.getElementById('addTask').addEventListener('click', ()=>{
+  const t = document.getElementById('newTask'); const text = t.value.trim(); if(!text) return;
+  const id = 'custom-' + Date.now();
+  addTaskToDOM(id, text, false);
+  t.value = '';
+  saveState();
+});
+document.querySelectorAll('#todoList input[type="checkbox"]').forEach(cb=>cb.addEventListener('change', saveState));
+loadState();
+</script>
+</body></html>

@@ -1,0 +1,88 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For Yashika ❤️</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Intro overlay with floating hearts (auto fade) -->
+  <div id="intro" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:1500;">
+    <div style="text-align:center">
+      <h1 style="color:var(--accent);font-family:'Playfair Display',serif">For Yashika 💖</h1>
+      <p style="color:#666">Open your heart — one moment away...</p>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand"><h1>For Yashika ❤️</h1></div>
+    <div class="nav">
+      <a class="btn" href="timeline.html">Timeline</a>
+      <a class="btn" href="todo.html">To-Do</a>
+      <a class="btn" href="game.html">Tic Tac Love</a>
+      <a class="btn" href="lovequiz.html">Are you serious?</a>
+      <a class="btn primary" href="bag.html">Special (Bag)</a>
+      <a class="btn" href="locker.html">Private</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero card">
+      <h2>Our Photos</h2>
+      <div class="slider" style="max-width:720px;margin:0 auto">
+        <div class="slides" id="slides">
+          <!-- Replace image files below with your photos (recommended 4-6). Put them into the images/ folder -->
+          <!-- images/photo1.jpg, images/photo2.jpg, images/photo3.jpg, images/photo4.jpg -->
+          <div class="slide"><img src="images/photo1.jpg" alt="photo1"></div>
+          <div class="slide"><img src="images/photo2.jpg" alt="photo2"></div>
+          <div class="slide"><img src="images/photo3.jpg" alt="photo3"></div>
+          <div class="slide"><img src="images/photo4.jpg" alt="photo4"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Quick Links</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <a class="btn" href="timeline.html">Our Timeline</a>
+        <a class="btn" href="todo.html">To-Do List</a>
+        <a class="btn" href="game.html">Play Tic Tac Love</a>
+        <a class="btn primary" href="lovequiz.html">Take the Quiz</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Notes</h2>
+      <p style="color:#444">Tip: To customize photos & songs, put your files inside the <code>images/</code> and <code>songs/</code> folders. See comments in other files for exact filenames.</p>
+    </section>
+  </main>
+
+  <footer class="footer">Made with ❤️ by Dhanush — For Yashika</footer>
+
+<script>
+/* Intro hearts + fade */
+const intro = document.getElementById('intro');
+// create decorative hearts
+for(let i=0;i<18;i++){
+  const h = document.createElement('div');
+  h.textContent = '💗';
+  h.style.position='absolute';
+  h.style.left = (10 + Math.random()*80)+'%';
+  h.style.top = (30 + Math.random()*50)+'%';
+  h.style.fontSize = (18+Math.random()*36)+'px';
+  h.style.opacity = 0.8;
+  h.style.transform = 'rotate('+ (Math.random()*40-20) +'deg)';
+  intro.appendChild(h);
+}
+// hide intro after 3s
+setTimeout(()=>{ intro.style.transition='opacity .8s'; intro.style.opacity=0; setTimeout(()=>intro.remove(),900); },3200);
+
+/* Slider simple */
+const slides = document.getElementById('slides');
+let i=0;
+setInterval(()=>{ i = (i+1) % slides.children.length; slides.style.transform = `translateX(-${i*100}%)`; },3200);
+</script>
+</body>
+</html>
